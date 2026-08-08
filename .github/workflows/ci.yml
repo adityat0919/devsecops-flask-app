@@ -38,7 +38,7 @@ jobs:
           source venv/bin/activate
           pytest -v
 
-      # SonarQube Cloud code quality scan
+      # SonarQube Cloud
       - name: SonarQube Cloud Scan
         uses: SonarSource/sonarqube-scan-action@v7
         env:
@@ -54,7 +54,24 @@ jobs:
           command: test
           args: --file=requirements.txt
 
-      # Docker image build
+      # Build Docker image
       - name: Build Docker Image
         run: |
           docker build --pull -t devsecops-flask-app:${{ github.sha }} .
+
+      # Install Snyk CLI
+      - name: Install Snyk CLI
+        run: |
+          curl --compressed https://static.snyk.io/cli/latest/snyk-linux -o snyk
+          chmod +x snyk
+          sudo mv snyk /usr/local/bin/snyk
+          snyk --version
+
+      # Scan Docker image with Snyk
+      - name: Scan Docker Image with Snyk
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          snyk container test devsecops-flask-app:${{ github.sha }} \
+            --severity-threshold=high
