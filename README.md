@@ -33,4 +33,4 @@ devsecops-flask-app/
 - Ready for GitHub Actions CI/CD
 - Ready for SonarCloud and Snyk integration
 
-Author: Aditya Todankar
+Author: Aditya Todankar# CI/CD verified
