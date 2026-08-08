@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Check Python Version
         run: python3 --version
@@ -35,3 +37,8 @@ jobs:
         run: |
           source venv/bin/activate
           pytest -v
+
+      - name: SonarQube Cloud Scan
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
