@@ -1,0 +1,27 @@
+name: Self-Hosted Runner Test
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-runner:
+    runs-on: self-hosted
+
+    steps:
+      - name: Show runner information
+        run: |
+          echo "Running on self-hosted runner"
+          hostname
+          whoami
+          uname -a
+
+      - name: Check Git
+        run: git --version
+
+      - name: Check Python
+        run: python3 --version
+
+      - name: Check Docker
+        run: docker --version
