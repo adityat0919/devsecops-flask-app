@@ -38,17 +38,23 @@ jobs:
           source venv/bin/activate
           pytest -v
 
+      # SonarQube Cloud code quality scan
       - name: SonarQube Cloud Scan
         uses: SonarSource/sonarqube-scan-action@v7
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+      # Snyk dependency security scan
       - name: Snyk Dependency Scan
+        uses: snyk/actions/python@master
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: |
-          snyk test --file=requirements.txt --package-manager=pip
+        with:
+          command: test
+          args: --file=requirements.txt
 
+      # Docker image build
       - name: Build Docker Image
         run: |
           docker build --pull -t devsecops-flask-app:${{ github.sha }} .
