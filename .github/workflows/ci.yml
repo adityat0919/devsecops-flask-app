@@ -14,64 +14,63 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      # 1. Checkout source code
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # 2. Check Python
       - name: Check Python Version
-        run: python3 --version
+        run: |
+          python3 --version
 
+      # 3. Create virtual environment
       - name: Create Virtual Environment
         run: |
           python3 -m venv venv
           source venv/bin/activate
           python -m pip install --upgrade pip
 
+      # 4. Install Python dependencies
       - name: Install Dependencies
         run: |
           source venv/bin/activate
           pip install -r requirements.txt
 
+      # 5. Run unit tests
       - name: Run Unit Tests
         run: |
           source venv/bin/activate
           pytest -v
 
-      # SonarQube Cloud
+      # 6. SonarQube Cloud analysis
       - name: SonarQube Cloud Scan
         uses: SonarSource/sonarqube-scan-action@v7
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      # Snyk dependency security scan
+      # 7. Snyk Python dependency scan
       - name: Snyk Dependency Scan
-        uses: snyk/actions/python@master
-        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: test
-          args: --file=requirements.txt
+        run: |
+          snyk test \
+            --file=requirements.txt \
+            --package-manager=pip
 
-      # Build Docker image
+      # 8. Build Docker image
       - name: Build Docker Image
         run: |
-          docker build --pull -t devsecops-flask-app:${{ github.sha }} .
+          docker build --pull \
+            -t devsecops-flask-app:${{ github.sha }} .
 
-      # Install Snyk CLI
-      - name: Install Snyk CLI
-        run: |
-          curl --compressed https://static.snyk.io/cli/latest/snyk-linux -o snyk
-          chmod +x snyk
-          sudo mv snyk /usr/local/bin/snyk
-          snyk --version
-
-      # Scan Docker image with Snyk
+      # 9. Snyk Docker container scan
       - name: Scan Docker Image with Snyk
-        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: |
-          snyk container test devsecops-flask-app:${{ github.sha }} \
+          snyk container test \
+            devsecops-flask-app:${{ github.sha }} \
+            --file=Dockerfile \
             --severity-threshold=high
